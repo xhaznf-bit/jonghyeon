@@ -14,6 +14,8 @@ const projects = {
   howdeep:{client:'개인 작업 / TYPOGRAPHY',title:'Tai Verdes — How Deep?',role:'기획 · 편집 · 디자인 · 특수효과',tools:'After Effects',id:'ki8EHOuO_fc',image:'history-2.webp',text:'가사와 멜로디를 바탕으로 제작한 타이포그래피 개인 작업입니다.'},
   bad:{client:'개인 작업 / TYPOGRAPHY',title:'Christopher — Bad',role:'기획 · 편집 · 디자인 · 특수효과',tools:'After Effects',id:'nA1kWX7Xv5E',image:'history-2.webp',text:'음악과 영어 가사를 공부하며 제작한 타이포그래피 개인 작업입니다.'}
 };
+const streams = {doctor:'media/doctor.m3u8',watch:'media/watch.m3u8',hanssem:'media/hanssem.m3u8'};
+let destroyStream = null;
 const esc = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const archive = document.querySelector('#archive-list');
 const archiveKeys = ['ecig','rolex','vacheron','edu','game','distance','howdeep','bad'];
@@ -24,8 +26,9 @@ const content = document.querySelector('#dialog-content');
 let trigger = null;
 function openProject(key,button){
   const p=projects[key]; if(!p)return;
+  destroyStream?.();destroyStream=null;
   trigger=button;
-  content.innerHTML=`<div class="detail-head"><p class="eyebrow">${esc(p.client)}</p><h2 id="dialog-title">${esc(p.title)}</h2><div class="detail-meta"><span>${esc(p.role)}</span>${p.duration?`<span>${p.duration}</span>`:''}<span>${esc(p.tools)}</span></div></div>${p.id?`<div class="detail-player"><img src="assets/${p.image}" alt="${esc(p.title)} 미리보기"><button data-play="${p.id}" aria-label="${esc(p.title)} 영상 재생"><span class="play-icon">▶</span><span>YouTube 영상 재생</span></button></div>`:''}<div class="detail-text"><p>${esc(p.text)}</p><div class="detail-links">${p.id?`<a href="https://www.youtube.com/watch?v=${p.id}" target="_blank" rel="noopener noreferrer">YouTube에서 보기 ↗</a>`:''}${p.storyboard?'<a href="https://yeseuling.github.io/jonghyeon/images/Storyboard_01.jpg" target="_blank" rel="noopener noreferrer">기존 기획서 보기 ↗</a>':''}</div></div>${p.frames?`<p class="frames-label">FOUR FRAMES / 장면 구성</p><div class="detail-frames">${p.frames.map((f,i)=>`<figure><img src="assets/${f}" loading="lazy" width="1600" height="900" alt="${esc(p.captions[i])}"><figcaption><span>0${i+1}</span>${esc(p.captions[i])}</figcaption></figure>`).join('')}</div>`:''}`;
+  content.innerHTML=`<div class="detail-head"><p class="eyebrow">${esc(p.client)}</p><h2 id="dialog-title">${esc(p.title)}</h2><div class="detail-meta"><span>${esc(p.role)}</span>${p.duration?`<span>${p.duration}</span>`:''}<span>${esc(p.tools)}</span></div></div>${p.id?`<div class="detail-player"><img src="assets/${p.image}" alt="${esc(p.title)} 미리보기"><button data-play="${p.id}" data-stream="${streams[key]||''}" aria-label="${esc(p.title)} 영상 재생"><span class="play-icon">▶</span><span>${streams[key]?'영상 재생':'YouTube 영상 재생'}</span></button></div>`:''}<div class="detail-text"><p>${esc(p.text)}</p><div class="detail-links">${p.id?`<a href="https://www.youtube.com/watch?v=${p.id}" target="_blank" rel="noopener noreferrer">YouTube에서 보기 ↗</a>`:''}${p.storyboard?'<a href="https://yeseuling.github.io/jonghyeon/images/Storyboard_01.jpg" target="_blank" rel="noopener noreferrer">기존 기획서 보기 ↗</a>':''}</div></div>${p.frames?`<p class="frames-label">FOUR FRAMES / 장면 구성</p><div class="detail-frames">${p.frames.map((f,i)=>`<figure><img src="assets/${f}" loading="lazy" width="1600" height="900" alt="${esc(p.captions[i])}"><figcaption><span>0${i+1}</span>${esc(p.captions[i])}</figcaption></figure>`).join('')}</div>`:''}`;
   document.body.classList.add('dialog-open');
   dialog.showModal();dialog.scrollTop=0;syncVideo();
 }
@@ -33,11 +36,14 @@ document.addEventListener('click',event=>{
   const projectButton=event.target.closest('[data-project]');
   if(projectButton)openProject(projectButton.dataset.project,projectButton);
   const playButton=event.target.closest('[data-play]');
-  if(playButton){const iframe=document.createElement('iframe');iframe.src=`https://www.youtube-nocookie.com/embed/${playButton.dataset.play}?autoplay=1&rel=0`;iframe.title=`${document.querySelector('#dialog-title').textContent} 영상`;iframe.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';iframe.allowFullscreen=true;iframe.referrerPolicy='strict-origin-when-cross-origin';playButton.parentElement.replaceChildren(iframe);}
+  if(playButton?.dataset.stream){
+    destroyStream?.();
+    destroyStream=window.mountPortfolioStream(playButton.parentElement,{source:playButton.dataset.stream,title:document.querySelector('#dialog-title').textContent,poster:playButton.parentElement.querySelector('img').src});
+  }else if(playButton){const iframe=document.createElement('iframe');iframe.src=`https://www.youtube-nocookie.com/embed/${playButton.dataset.play}?autoplay=1&rel=0`;iframe.title=`${document.querySelector('#dialog-title').textContent} 영상`;iframe.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';iframe.allowFullscreen=true;iframe.referrerPolicy='strict-origin-when-cross-origin';playButton.parentElement.replaceChildren(iframe);}
 });
 document.querySelector('#dialog-close').addEventListener('click',()=>dialog.close());
 dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}});
-dialog.addEventListener('close',()=>{content.replaceChildren();document.body.classList.remove('dialog-open');trigger?.focus({preventScroll:true});syncVideo();});
+dialog.addEventListener('close',()=>{destroyStream?.();destroyStream=null;content.replaceChildren();document.body.classList.remove('dialog-open');trigger?.focus({preventScroll:true});syncVideo();});
 
 const video=document.querySelector('#hero-video');
 const toggle=document.querySelector('#motion-toggle');
