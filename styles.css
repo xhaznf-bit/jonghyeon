@@ -37,6 +37,7 @@
 
 /* Keep Korean roles, duration and Latin tool names on the same text baseline. */
 .detail-head h2{line-height:1.35;word-break:keep-all;overflow-wrap:anywhere}
-.detail-meta{align-items:baseline;gap:8px 24px;margin-top:20px;font-family:"Noto Sans KR","Malgun Gothic",Arial,sans-serif;font-size:12px;line-height:21px}
+@font-face{font-family:PortfolioMeta;src:url('assets/pretendard-meta.woff2') format('woff2');font-style:normal;font-weight:45 920;font-display:swap}
+.detail-meta{align-items:baseline;gap:8px 24px;margin-top:20px;font-family:PortfolioMeta,sans-serif;font-size:12px;line-height:21px}
 .detail-meta>span{line-height:inherit}
 @media(max-width:600px){.detail-meta{gap:4px 18px;margin-top:16px;font-size:11px;line-height:20px}.detail-meta>span:last-child{flex-basis:100%}}
